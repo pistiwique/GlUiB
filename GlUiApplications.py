@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 # GlUiB Gui module for Blender
 # Copyright (C) 2018 Legigan Jeremy AKA Pistiwique
 #
@@ -19,13 +17,36 @@
 # <pep8 compliant>
 
 
-class GlUiObject:
-    def __init__(self, parent=None):
-        self._parent = parent
+from .GlUiCore import GlSize, GlArea
+
+
+class GlApplication:
+    _applications = []
+
+    def __init__(self, context):
+        GlArea.set_context(context)
+
+    @classmethod
+    def add_application(cls, app):
+        cls._applications.append(app)
+    
+    def connect_event(self, event):
+        for app in self._applications:
+            if hasattr(app, "connect_event"):
+                app.connect_event(event)
+            
+            
+class GlWindow(GlSize, GlArea):
+    def __init__(self):
+        self._alignment = None
 
     @property
-    def parent(self):
-        return self._parent
+    def alignment(self):
+        return self._alignment
 
-    def set_parent(self, parent):
-        self._parent = parent
+    def set_alignment(self, alignment):
+        self._alignment = alignment
+
+    def connect_event(self, event):
+        print(self.get_view_3d_area())
+        

@@ -43,13 +43,23 @@ class GlArea:
     def set_context(cls, context):
         cls._context = context
 
+    def get_3d_view(self):
+        for area in self.context.screen.areas:
+            if area.type != 'VIEW_3D':
+                continue
+            return area
+
     def get_view_3d_area(self):
         if self.context is None:
             return
 
+        area = self.get_3d_view()
+        if area is None:
+            return
+
         system = self.context.preferences.system
-        width = self.context.region.width
-        height = self.context.region.height
+        width = area.width
+        height = area.height
 
         left = 0
         top = height
@@ -57,7 +67,7 @@ class GlArea:
         bottom = 0
 
         if system.use_region_overlap:
-            for region in self.context.area.regions:
+            for region in area.regions:
                 if region.type == 'TOOLS':
                     left += region.width
                 elif region.type == 'UI':
@@ -68,57 +78,131 @@ class GlArea:
         return left, top, right, bottom
 
 
-class GlLocation:
-    def __init__(self):
-        self._location_x = 0
-        self._location_y = 0
+class GlRectangle:
+    def __init__(self, x=0, y=0, w=10, h=10):
+        self._x = x
+        self._y = y
+        self._width = w
+        self._height = h
 
     @property
-    def location_x(self):
+    def x(self):
         """
-        This property holds the x coordinate of the widget relative to its parent
+        Returns the x-coordinate of the rectangle’s left edge relative to
+        its parent.
+        Equivalent to GlUiB.GlUiCore.GlRectangle.left().
         :return: int
         """
-        return self._location_x
+        return self._x
 
     @property
-    def location_y(self):
+    def y(self):
         """
-        This property holds the y coordinate of the widget relative to its
-        parent
+        Returns the y-coordinate of the rectangle’s bottom edge relative to
+        its parent.
+        Equivalent to GlUiB.GlUiCore.GlRectangle.bottom().
         :return: int
         """
-        return self._location_y
-
-    @property
-    def location(self):
-        """
-        This property holds the coordinates of the widget relative to its
-        parent
-        :return: (x: int, y: int)
-        """
-        return (self.location_x, self.location_y)
+        return self._y
 
     def set_location(self, x: int, y: int):
-        self._location_x, self._location_y = max(0, int(x)), max(0, int(y))
+        """
+        Set the position of the rectangle's bottom-left corner with the
+        given 'x' and 'y'.
+        :param x: int
+        :param y: int
+        """
+        self._x, self._y = max(0, int(x)), max(0, int(y))
 
+    @property
+    def left(self):
+        """
+        Return the x-coordinate of the rectangle's left edge.
+        Equivalent to GlUiB.GlUiCore.GlRectangle.x
+        :return: int
+        """
+        return self.x
 
-class GlSize:
-    def __init__(self):
-        self._width = 0
-        self._height = 0
+    @property
+    def top(self):
+        """
+        Return the y-coordinate of the rectangle's top edge.
+        :return: int
+        """
+        return self.y + self.height
+
+    @property
+    def right(self):
+        """
+        Return the x-coordinate of the rectangle's right edge.
+        Equivalent to GlUiB.GlUiCore.GlRectangle.x
+        :return: int
+        """
+        return self.x + self.width
+
+    @property
+    def bottom(self):
+        """
+        Return the y-coordinate of the rectangle's bottom edge.
+        Equivalent to GlUiB.GlUiCore.GlRectangle.y
+        :return: int
+        """
+        return self.y
 
     @property
     def width(self):
+        """
+        Return the width of the rectangle.
+        :return: int
+        """
         return self._width
 
     @property
     def height(self):
+        """
+        Return the height of the rectangle.
+        :return: int
+        """
         return self._height
 
-    @property
-    def size(self):
-        return (self.width, self.height)
+    def set_width(self, w: int):
+        """
+        Set the width of the rectangle
+        :param w: int
+        """
+        self._width = max(0, int(w))
+
+    def set_height(self, h: int):
+        """
+        Set the height of the rectangle
+        :param h: int
+        """
+        self._height = max(0, int(h))
 
     def set_size(self, w: int, h: int):
+        """
+        Set the size of the rectangle with to the given 'width' and 'height'.
+        :param w: int
+        :param h: int
+        """
         self._width, self._height = max(0, int(w)), max(0, int(h))
+
+    def get_rect(self):
+        """
+        Return the position of the rectangle's bottom-left corner to 'x' and 'y',
+        and its dimensions to 'width' and 'height'.
+        :return: (x: int, y: int, width: int, height: int)
+        """
+        return (self.x, self.y, self.width, self.height)
+
+    def set_rect(self, x: int, y: int, w: int, h: int):
+        """
+        Sets the coordinates of the rectangle’s bottom-left corner to
+        'x' and 'y', and its size to the given 'width' and 'height'.
+        :param x: int
+        :param y: int
+        :param w: int
+        :param h: int
+        """
+        self.set_location(x, y)
+        self.set_size(w, h)

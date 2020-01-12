@@ -17,36 +17,61 @@
 # <pep8 compliant>
 
 
-from .GlUiCore import GlSize, GlArea
+import bpy
+
+from .GlUiCore import GlArea
+from .GlUiGui import GlBoxLayout
 
 
 class GlApplication:
+    _handler = None
     _applications = []
 
     def __init__(self, context):
         GlArea.set_context(context)
+        self.setup_handler()
 
     @classmethod
     def add_application(cls, app):
+
         cls._applications.append(app)
     
     def connect_event(self, event):
         for app in self._applications:
             if hasattr(app, "connect_event"):
                 app.connect_event(event)
+
+    @classmethod
+    def setup_handler(cls):
+        cls._handler = bpy.types.SpaceView3D.draw_handler_add(
+                cls.draw_applications, (), 'WINDOW', 'POST_PIXEL'
+                )
+
+    @classmethod
+    def remove_handler(cls):
+        bpy.types.SpaceView3D.draw_handler_remove(cls._handler, 'WINDOW')
+
+    @classmethod
+    def draw_applications(cls):
+        for app in cls._applications:
+            app.draw()
             
             
-class GlWindow(GlSize, GlArea):
-    def __init__(self):
-        self._alignment = None
+class GlWindow(GlBoxLayout, GlArea):
+    def __init__(self, scale=150):
+        GlBoxLayout.__init__(self)
+        self._scale = scale
 
-    @property
-    def alignment(self):
-        return self._alignment
+    def set_scale(self, value):
+        self._scale = value
 
-    def set_alignment(self, alignment):
-        self._alignment = alignment
+    def _set_geometry(self):
+        a_left, a_top, a_right, a_bottom = self.get_view_3d_area()
+        self.set_rect(a_left, a_bottom, a_right, self._scale)
 
     def connect_event(self, event):
-        print(self.get_view_3d_area())
-        
+        pass
+
+    def draw(self):
+        self._set_geometry()
+        self.draw_widget(self.get_rect())
